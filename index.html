@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Weekly Job Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0c10;
+            --surface: #13131a;
+            --panel: #1a1a23;
+            --border: #252530;
+            --border-hi: #35354a;
+            --text: #ffffff;
+            --muted: #9e9efd;
+            --dim: #2e2e3f;
+            --accent: #5b8cee;
+            --accent-glow: rgba(91, 140, 238, 0.18);
+            --green: #3dcf82;
+            --green-bg: rgba(61, 207, 130, 0.10);
+            --red: #f05555;
+            --red-bg: rgba(240, 85, 85, 0.10);
+            --amber: #f0a84c;
+            --amber-bg: rgba(240, 168, 76, 0.10);
+            --radius: 6px;
+            --radius-lg: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        .topbar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 20px;
+            height: 50px;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+
+        .topbar-row+.topbar-row {
+            border-top: 1px solid var(--border);
+            height: 44px;
+        }
+
+        /* Desktop ≥ 960px: collapse into 1 row */
+        @media (min-width: 1160px) {
+            .topbar {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+                padding: 0 24px;
+                height: 56px;
+            }
+
+            .topbar-row {
+                padding: 0;
+                height: auto;
+                border-top: none !important;
+                gap: 10px;
+                overflow: visible;
+            }
+
+            .topbar-row+.topbar-row {
+                border-top: none;
+                height: auto;
+            }
+
+            .topbar-row.row-right {
+                margin-left: auto;
+            }
+        }
+
+        /* Mobile: stack rows */
+        @media (max-width: 1159px) {
+            .topbar-row {
+                width: 100%;
+                flex-wrap: wrap;
+                height: auto;
+                padding: 8px 14px;
+                gap: 8px;
+                overflow: visible;
+            }
+
+            .topbar-row+.topbar-row {
+                padding: 6px 14px 8px;
+            }
+
+            .topbar-sep {
+                display: none;
+            }
+
+            .week-nav {
+                flex: 1;
+                justify-content: flex-end;
+            }
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.02em;
+            color: var(--text);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .app-logo-icon {
+            width: 26px;
+            height: 26px;
+            background: var(--accent);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .topbar-sep {
+            width: 1px;
+            height: 22px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .account-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .account-label {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .account-input {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            padding: 6px 12px;
+            width: 150px;
+            min-width: 0;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        @media (max-width: 1159px) {
+            .account-input {
+                width: 120px;
+                font-size: 12px;
+                padding: 5px 8px;
+            }
+
+            .account-label {
+                display: none;
+            }
+
+            .btn-sm {
+                padding: 5px 9px;
+                font-size: 12px;
+            }
+        }
+
+        .account-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .account-input::placeholder {
+            color: var(--muted);
+        }
+
+        /* ── WEEK NAV ── */
+        .week-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .week-info {
+            text-align: center;
+            min-width: 170px;
+        }
+
+        .week-id-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            display: block;
+        }
+
+        .week-range-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .nav-btn {
+            width: 28px;
+            height: 28px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            transition: background 0.15s, border-color 0.15s;
+            flex-shrink: 0;
+        }
+
+        .nav-btn:hover {
+            background: var(--dim);
+            border-color: var(--border-hi);
+        }
+
+        @media (max-width: 1159px) {
+            .week-nav {
+                gap: 4px;
+                margin-left: 0;
+            }
+
+            .week-info {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .week-id-label {
+                font-size: 12px;
+            }
+
+            .week-range-label {
+                font-size: 10px;
+            }
+
+            .nav-btn {
+                width: 26px;
+                height: 26px;
+                font-size: 14px;
+            }
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 7px 14px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .btn:hover {
+            background: var(--dim);
+            border-color: var(--border-hi);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #4a7de0;
+            border-color: #4a7de0;
+        }
+
+        .btn-sm {
+            padding: 5px 11px;
+            font-size: 12px;
+        }
+
+        /* ── STATUS ── */
+        .conn-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .conn-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        .conn-dot.loading {
+            background: var(--amber);
+            animation: pulse 1s infinite;
+        }
+
+        .conn-dot.error {
+            background: var(--red);
+        }
+
+        .save-status {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 99px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .save-status.saved {
+            color: var(--green);
+            background: var(--green-bg);
+            border-color: rgba(61, 207, 130, 0.2);
+        }
+
+        .save-status.saving {
+            color: var(--amber);
+            background: var(--amber-bg);
+            border-color: rgba(240, 168, 76, 0.2);
+        }
+
+        .save-status.error {
+            color: var(--red);
+            background: var(--red-bg);
+            border-color: rgba(240, 85, 85, 0.2);
+        }
+
+        /* ── MAIN ── */
+        .main {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 20px 20px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @media (max-width: 1159px) {
+            .main {
+                padding: 14px 12px 40px;
+                gap: 12px;
+            }
+        }
+
+        /* ── WEEK SUMMARY ── */
+        .week-summary {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            padding: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding: 14px 24px;
+            flex: 1;
+            border-right: 1px solid var(--border);
+        }
+
+        .summary-item:last-child {
+            border-right: none;
+        }
+
+        .summary-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+        .summary-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .summary-unit {
+            font-size: 11px;
+            color: var(--muted);
+            margin-left: 2px;
+        }
+
+        /* ── DAY BLOCK ── */
+        .day-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .day-block.is-today {
+            border-color: rgba(91, 140, 238, 0.35);
+        }
+
+        .day-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 18px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .day-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            flex: 1;
+            letter-spacing: 0.01em;
+        }
+
+        .is-today .day-label {
+            color: var(--accent);
+        }
+
+        .today-badge {
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            color: var(--accent);
+            background: var(--accent-glow);
+            border: 1px solid rgba(91, 140, 238, 0.3);
+            padding: 2px 8px;
+            border-radius: 99px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .day-task-count {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .day-del-btn {
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .day-del-btn:hover {
+            background: var(--red-bg);
+            border-color: rgba(240, 85, 85, 0.3);
+            color: var(--red);
+        }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 8px 12px;
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            user-select: none;
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        thead th.center {
+            text-align: center;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.1s;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.022);
+        }
+
+        td {
+            padding: 7px 10px;
+            vertical-align: middle;
+        }
+
+        .td-num {
+            width: 36px;
+            text-align: center;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .td-job {
+            min-width: 340px;
+        }
+
+        .td-est {
+            width: 110px;
+        }
+
+        .td-fill {
+            width: 110px;
+        }
+
+        .td-note {
+            min-width: 280px;
+        }
+
+        .td-del {
+            width: 46px;
+            text-align: center;
+        }
+
+        td input[type="text"],
+        td input[type="number"] {
+            width: 100%;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            padding: 5px 8px;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        td input[type="text"]:focus,
+        td input[type="number"]:focus {
+            border-color: var(--accent);
+            background: var(--panel);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        td input::placeholder {
+            color: var(--muted);
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        td input[type="number"] {
+            text-align: center;
+        }
+
+        td input[type="number"]::-webkit-inner-spin-button {
+            opacity: 0;
+        }
+
+        td input[type="number"]:hover::-webkit-inner-spin-button {
+            opacity: 1;
+        }
+
+        /* ── TOTAL ROW ── */
+        tfoot tr {
+            background: var(--panel);
+        }
+
+        tfoot td {
+            padding: 8px 12px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .total-label {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .total-num {
+            text-align: center;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .total-rem {
+            font-size: 12px;
+        }
+
+        .total-rem.over {
+            color: var(--red);
+        }
+
+        .total-rem.ok {
+            color: var(--green);
+        }
+
+        .total-rem.zero {
+            color: var(--muted);
+        }
+
+        /* ── DEL BTN ── */
+        .del-task-btn {
+            width: 26px;
+            height: 26px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto;
+            transition: all 0.15s;
+        }
+
+        .del-task-btn:hover {
+            background: var(--red-bg);
+            border-color: rgba(240, 85, 85, 0.3);
+            color: var(--red);
+        }
+
+        /* ── DAY FOOTER ── */
+        .day-footer {
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── ADD DAY ── */
+        .add-day-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--muted);
+        }
+
+        .empty-icon {
+            font-size: 40px;
+            margin-bottom: 14px;
+            opacity: 0.45;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* ── CALENDAR MODAL ── */
+        #calOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.58);
+            backdrop-filter: blur(3px);
+            z-index: 900;
+        }
+
+        #calModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 901;
+            background: var(--panel);
+            border: 1px solid var(--border-hi);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.75);
+            width: 310px;
+            overflow: hidden;
+        }
+
+        .cal-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cal-month-lbl {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .cal-nav-row {
+            display: flex;
+            gap: 4px;
+        }
+
+        .cal-nav-btn {
+            width: 28px;
+            height: 28px;
+            background: var(--dim);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+
+        .cal-nav-btn:hover {
+            background: var(--border-hi);
+        }
+
+        .cal-close-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: color 0.15s;
+        }
+
+        .cal-close-btn:hover {
+            color: var(--text);
+        }
+
+        .cal-body {
+            padding: 12px 14px;
+        }
+
+        .cal-days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            margin-bottom: 6px;
+        }
+
+        .cal-wd-hdr {
+            text-align: center;
+            padding: 5px 0;
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+        }
+
+        .cal-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            color: var(--text);
+            transition: background 0.12s;
+            position: relative;
+        }
+
+        .cal-cell:hover {
+            background: var(--dim);
+        }
+
+        .cal-cell.other {
+            color: var(--muted);
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .cal-cell.today {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .cal-cell.today::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .cal-cell.has-day {
+            font-weight: 700;
+        }
+
+        .cal-cell.has-day::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        .cal-cell.today.has-day::after {
+            background: var(--accent);
+        }
+
+        .cal-cell.picked {
+            background: var(--accent) !important;
+            color: #fff !important;
+        }
+
+        .cal-cell.picked::after {
+            display: none;
+        }
+
+        .cal-footer {
+            padding: 10px 14px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cal-selected-lbl {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            flex: 1;
+        }
+
+        .cal-selected-lbl span {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dim);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hi);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ── TOPBAR ── -->
+    <header class="topbar">
+        <!-- Row 1: Brand + Account + Status -->
+        <div class="topbar-row">
+            <a href="#" class="app-logo">
+                <div class="app-logo-icon">📋</div>
+                WeekTrack
+            </a>
+            <div class="topbar-sep"></div>
+            <div class="account-section">
+                <span class="account-label">Account</span>
+                <input type="text" id="accountInput" class="account-input" placeholder="Enter name…" maxlength="50"
+                    onkeydown="if(event.key==='Enter') switchAccount()">
+                <button class="btn btn-sm" onclick="switchAccount()">Load</button>
+                <button class="btn btn-primary btn-sm" onclick="createAccount()">+ Create</button>
+            </div>
+            <div class="topbar-sep"></div>
+            <div class="conn-status">
+                <div class="conn-dot loading" id="connDot"></div>
+                <span id="connText">Connecting…</span>
+            </div>
+            <div class="save-status saved" id="saveStatus" style="margin-left:auto;">Ready</div>
+        </div>
+        <!-- Row 2: Cloud actions + Week nav -->
+        <div class="topbar-row row-right">
+            <button class="btn btn-sm" onclick="saveToCloud()" id="saveBtn" disabled>☁ Save</button>
+            <button class="btn btn-sm" onclick="loadFromCloud()" id="loadBtn" disabled>↓ Load</button>
+            <div class="topbar-sep"></div>
+            <div class="week-nav">
+                <button class="nav-btn" onclick="shiftWeek(-1)" title="Previous week">‹</button>
+                <div class="week-info">
+                    <span class="week-id-label" id="weekIdLbl">—</span>
+                    <span class="week-range-label" id="weekRngLbl">—</span>
+                </div>
+                <button class="nav-btn" onclick="shiftWeek(1)" title="Next week">›</button>
+                <button class="btn btn-sm" onclick="goToday()" style="margin-left:4px;">Today</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── MAIN ── -->
+    <div class="main" id="main"></div>
+
+    <!-- ── CALENDAR ── -->
+    <div id="calOverlay" onclick="closeCalendar()"></div>
+    <div id="calModal">
+        <div class="cal-hdr">
+            <div class="cal-nav-row">
+                <button class="cal-nav-btn" onclick="calShiftMonth(-1)">‹</button>
+                <button class="cal-nav-btn" onclick="calShiftMonth(1)">›</button>
+            </div>
+            <span class="cal-month-lbl" id="calMonthLbl">—</span>
+            <button class="cal-close-btn" onclick="closeCalendar()">✕</button>
+        </div>
+        <div class="cal-body">
+            <div class="cal-days-grid" id="calDaysGrid">
+                <div class="cal-wd-hdr">Mo</div>
+                <div class="cal-wd-hdr">Tu</div>
+                <div class="cal-wd-hdr">We</div>
+                <div class="cal-wd-hdr">Th</div>
+                <div class="cal-wd-hdr">Fr</div>
+                <div class="cal-wd-hdr">Sa</div>
+                <div class="cal-wd-hdr">Su</div>
+            </div>
+        </div>
+        <div class="cal-footer">
+            <div class="cal-selected-lbl" id="calSelectedLbl">Select a date</div>
+            <button class="btn btn-sm" onclick="closeCalendar()">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="calAddBtn" onclick="confirmCalDate()" disabled>Add Date</button>
+        </div>
+    </div>
+
+    <!-- ── FIREBASE SDK ── -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    <script>
+        // ══════════════════════════════════════════════
+        //  FIREBASE
+        // ══════════════════════════════════════════════
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRObVgxoUPEuIDV49ldTCtwVGmvmW3rlY",
+            authDomain: "task-manager-personal-f543e.firebaseapp.com",
+            projectId: "task-manager-personal-f543e",
+            storageBucket: "task-manager-personal-f543e.firebasestorage.app",
+            messagingSenderId: "439010018138",
+            appId: "1:439010018138:web:e497a23cae97bc77e52963"
+        };
+
+        let db = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            setConn('ok', 'Connected');
+        } catch (e) {
+            setConn('error', 'Offline');
+        }
+
+        function setConn(state, txt) {
+            document.getElementById('connDot').className =
+                'conn-dot' + (state === 'loading' ? ' loading' : state === 'error' ? ' error' : '');
+            document.getElementById('connText').textContent = txt;
+        }
+
+        // ══════════════════════════════════════════════
+        //  STATE
+        // ══════════════════════════════════════════════
+        let account = '';
+        let weekId = '';
+        let weekData = { days: [] };  // days: [{date, tasks:[{id,jobName,estimate,filled,note}]}]
+        let idCounter = 1;
+        let saveTimer = null;
+        let calYear = 0;
+        let calMonth = 0;
+        let calPicked = null;
+
+        // ══════════════════════════════════════════════
+        //  WEEK HELPERS
+        // ══════════════════════════════════════════════
+        const MONTH_LONG = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+        const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        function todayISO() {
+            const d = new Date();
+            return isoDate(d);
+        }
+        function isoDate(d) {
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        }
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        /* ISO week id: "2026-W16" (Monday-based) */
+        function weekIdOf(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            const dow = d.getDay() || 7;            // Mon=1 … Sun=7
+            const thu = new Date(d);
+            thu.setDate(d.getDate() + (4 - dow));   // nearest Thursday
+            const y = thu.getFullYear();
+            const jan1 = new Date(y, 0, 1);
+            const wk = Math.ceil(((thu - jan1) / 86400000 + 1) / 7);
+            return `${y}-W${pad(wk)}`;
+        }
+
+        /* Monday of the given ISO week */
+        function mondayOf(wId) {
+            const [y, w] = wId.split('-W').map(Number);
+            const jan4 = new Date(y, 0, 4);
+            const dow = jan4.getDay() || 7;
+            const mon = new Date(jan4);
+            mon.setDate(jan4.getDate() - (dow - 1) + (w - 1) * 7);
+            return mon;
+        }
+
+        function weekLabel(wId) {
+            const [y, w] = wId.split('-W');
+            return `Week ${parseInt(w, 10)} · ${y}`;
+        }
+        function weekRangeLabel(wId) {
+            const mon = mondayOf(wId);
+            const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+            return `${MONTH_SHORT[mon.getMonth()]} ${mon.getDate()} – `
+                + `${MONTH_SHORT[sun.getMonth()]} ${sun.getDate()}`;
+        }
+
+        function dateLabel(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            return `${DAY_SHORT[d.getDay()]} ${d.getDate()} ${MONTH_LONG[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        // ══════════════════════════════════════════════
+        //  ACCOUNT
+        // ══════════════════════════════════════════════
+        function switchAccount() {
+            const val = document.getElementById('accountInput').value.trim();
+            if (!val) return;
+            account = val;
+            localStorage.setItem('wt_account', val);
+            loadWeek(weekId || weekIdOf(todayISO()));
+        }
+
+        async function createAccount() {
+            const val = document.getElementById('accountInput').value.trim();
+            if (!val) { alert('Enter an account name first.'); return; }
+            if (!db) { alert('No Firebase connection.'); return; }
+            account = val;
+            localStorage.setItem('wt_account', val);
+            setConn('loading', 'Creating…');
+            try {
+                // Create root document if not exists (merge so we don't overwrite)
+                await db.collection('taskAccounts').doc(account).set({
+                    accountName: account,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                setConn('ok', 'Connected');
+                enableCloudBtns(true);
+                loadWeek(weekId || weekIdOf(todayISO()));
+            } catch (e) {
+                setConn('error', 'Error: ' + e.code);
+                alert('Could not create account: ' + e.message);
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  WEEK NAVIGATION
+        // ══════════════════════════════════════════════
+        function setWeekUI(wId) {
+            weekId = wId;
+            document.getElementById('weekIdLbl').textContent = weekLabel(wId);
+            document.getElementById('weekRngLbl').textContent = weekRangeLabel(wId);
+        }
+
+        function shiftWeek(delta) {
+            const mon = mondayOf(weekId);
+            mon.setDate(mon.getDate() + delta * 7);
+            const nwId = weekIdOf(isoDate(mon));
+            setWeekUI(nwId);
+            if (account) loadWeek(nwId);
+        }
+
+        function goToday() {
+            const nwId = weekIdOf(todayISO());
+            setWeekUI(nwId);
+            if (account) loadWeek(nwId);
+        }
+
+        // ══════════════════════════════════════════════
+        //  FIREBASE LOAD / SAVE
+        //  Data path: taskAccounts/{account}
+        //  Each week stored as field "wk_2026W16" (merge)
+        // ══════════════════════════════════════════════
+
+        // "2026-W16" → "wk_2026W16"
+        function weekKey(wId) { return 'wk_' + wId.replace('-W', 'W'); }
+
+        function docRef() { return db.collection('taskAccounts').doc(account); }
+
+        function enableCloudBtns(on) {
+            document.getElementById('saveBtn').disabled = !on;
+            document.getElementById('loadBtn').disabled = !on;
+        }
+
+        async function loadWeek(wId) {
+            if (!db || !account) { renderAll(); return; }
+            setConn('loading', 'Loading…');
+            setSaveStatus('loading');
+            try {
+                const snap = await docRef().get();
+                if (snap.exists) {
+                    const wData = snap.data()[weekKey(wId)];
+                    weekData = { days: (wData && wData.days) || [] };
+                    idCounter = (wData && wData.counter) || 1;
+                } else {
+                    weekData = { days: [] };
+                    idCounter = 1;
+                }
+                setConn('ok', 'Connected');
+                setSaveStatus('saved');
+                enableCloudBtns(true);
+            } catch (e) {
+                console.error('loadWeek error:', e);
+                setConn('error', 'Error: ' + e.code);
+                setSaveStatus('error');
+                weekData = { days: [] };
+                idCounter = 1;
+                enableCloudBtns(false);
+            }
+            renderAll();
+        }
+
+        // Manual save (button)
+        async function saveToCloud() {
+            if (!db || !account || !weekId) return;
+            clearTimeout(saveTimer);
+            await doSave();
+        }
+
+        // Manual load (button)
+        async function loadFromCloud() {
+            if (!db || !account || !weekId) return;
+            await loadWeek(weekId);
+        }
+
+        function scheduleSave() {
+            setSaveStatus('saving');
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(doSave, 1400);
+        }
+
+        async function doSave() {
+            if (!db || !account || !weekId) return;
+            setSaveStatus('saving');
+            try {
+                await docRef().set({
+                    [weekKey(weekId)]: {
+                        days: weekData.days,
+                        counter: idCounter
+                    },
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                setSaveStatus('saved');
+            } catch (e) {
+                console.error('doSave error:', e);
+                setSaveStatus('error');
+            }
+        }
+
+        function setSaveStatus(s) {
+            const el = document.getElementById('saveStatus');
+            el.className = 'save-status';
+            const map = {
+                saving: ['saving', '⟳ Saving…'],
+                saved: ['saved', '✓ Saved'],
+                loading: ['saving', '⟳ Loading…'],
+                error: ['error', '⚠ Error'],
+            };
+            const [cls, txt] = map[s] || ['saved', 'Ready'];
+            el.classList.add(cls);
+            el.textContent = txt;
+        }
+
+        // ══════════════════════════════════════════════
+        //  DATA MUTATIONS
+        // ══════════════════════════════════════════════
+        function addDay(dateStr) {
+            if (weekData.days.find(d => d.date === dateStr)) return;
+            weekData.days.push({ date: dateStr, tasks: [] });
+            weekData.days.sort((a, b) => b.date.localeCompare(a.date));
+            renderAll();
+            scheduleSave();
+            // Focus first task input after render
+            setTimeout(() => {
+                const addBtn = document.querySelector(`[data-day="${dateStr}"] .add-task-btn`);
+                if (addBtn) addBtn.click();
+            }, 80);
+        }
+
+        function removeDay(dateStr) {
+            if (!confirm(`Remove all tasks for ${dateLabel(dateStr)}?`)) return;
+            weekData.days = weekData.days.filter(d => d.date !== dateStr);
+            renderAll();
+            scheduleSave();
+        }
+
+        function addTask(dateStr) {
+            const day = weekData.days.find(d => d.date === dateStr);
+            if (!day) return;
+            const newTask = { id: idCounter++, jobName: '', estimate: null, filled: null, note: '' };
+            day.tasks.push(newTask);
+            renderDayTbody(dateStr);
+            renderDayTfoot(dateStr);
+            renderSummary();
+            updateBadge(dateStr);
+            scheduleSave();
+            // Focus new row
+            setTimeout(() => {
+                const rows = document.querySelectorAll(`[data-day="${dateStr}"] .job-input`);
+                if (rows.length) rows[rows.length - 1].focus();
+            }, 30);
+        }
+
+        function removeTask(dateStr, taskId) {
+            const day = weekData.days.find(d => d.date === dateStr);
+            if (!day) return;
+            day.tasks = day.tasks.filter(t => t.id !== taskId);
+            renderDayTbody(dateStr);
+            renderDayTfoot(dateStr);
+            renderSummary();
+            updateBadge(dateStr);
+            scheduleSave();
+        }
+
+        function updateTask(dateStr, taskId, field, value) {
+            const day = weekData.days.find(d => d.date === dateStr);
+            if (!day) return;
+            const task = day.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            task[field] = (field === 'estimate' || field === 'filled')
+                ? (value === '' ? null : parseFloat(value) || 0)
+                : value;
+            renderDayTfoot(dateStr);
+            renderSummary();
+            scheduleSave();
+        }
+
+        // ══════════════════════════════════════════════
+        //  RENDER — helpers
+        // ══════════════════════════════════════════════
+        function esc(s) {
+            if (s == null) return '';
+            return String(s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function fmtNum(n) {
+            return (n == null) ? '' : n;
+        }
+
+        function dayTotals(day) {
+            let est = 0, fill = 0;
+            day.tasks.forEach(t => {
+                est += t.estimate != null ? t.estimate : 0;
+                fill += t.filled != null ? t.filled : 0;
+            });
+            return { est, fill, rem: est - fill };
+        }
+
+        // ══════════════════════════════════════════════
+        //  RENDER — full
+        // ══════════════════════════════════════════════
+        function renderAll() {
+            const main = document.getElementById('main');
+            main.innerHTML = '';
+            main.appendChild(buildSummary());
+
+            // Add Date button — always at the top
+            const addRow = document.createElement('div');
+            addRow.className = 'add-day-row';
+            addRow.innerHTML = `<button class="btn" onclick="openCalendar()">📅 Add Date</button>`;
+            main.appendChild(addRow);
+
+            if (weekData.days.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'empty-state';
+                empty.innerHTML = `
+            <div class="empty-icon">📅</div>
+            <div class="empty-text">No tasks for this week yet.<br>Add a date to get started.</div>
+        `;
+                main.appendChild(empty);
+            } else {
+                weekData.days.forEach(day => main.appendChild(buildDayBlock(day)));
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  RENDER — summary bar
+        // ══════════════════════════════════════════════
+        function buildSummary() {
+            const el = document.createElement('div');
+            el.className = 'week-summary';
+            el.id = 'wk-summary';
+            el.innerHTML = summaryHTML();
+            return el;
+        }
+
+        function summaryHTML() {
+            let est = 0, fill = 0;
+            weekData.days.forEach(day => {
+                const t = dayTotals(day);
+                est += t.est; fill += t.fill;
+            });
+            const rem = est - fill;
+            const pct = est > 0 ? Math.min(100, (fill / est) * 100) : 0;
+            const remColor = rem > 0 ? 'var(--text)' : rem < 0 ? 'var(--red)' : 'var(--green)';
+            return `
+        <div class="summary-item">
+            <span class="summary-label">Estimate</span>
+            <span class="summary-value">${est.toFixed(1)}<span class="summary-unit">h</span></span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Filled</span>
+            <span class="summary-value">${fill.toFixed(1)}<span class="summary-unit">h</span></span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Remaining</span>
+            <span class="summary-value" style="color:${remColor}">
+                ${rem >= 0 ? rem.toFixed(1) : '+' + Math.abs(rem).toFixed(1)}<span class="summary-unit">h</span>
+            </span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Progress</span>
+            <span class="summary-value">${pct.toFixed(0)}<span class="summary-unit">%</span></span>
+        </div>
+    `;
+        }
+
+        function renderSummary() {
+            const el = document.getElementById('wk-summary');
+            if (el) el.innerHTML = summaryHTML();
+        }
+
+        // ══════════════════════════════════════════════
+        //  RENDER — day block
+        // ══════════════════════════════════════════════
+        function buildDayBlock(day) {
+            const wrap = document.createElement('div');
+            const isToday = day.date === todayISO();
+            wrap.className = 'day-block' + (isToday ? ' is-today' : '');
+            wrap.setAttribute('data-day', day.date);
+
+            const todayPill = isToday ? `<span class="today-badge">Today</span>` : '';
+            wrap.innerHTML = `
+        <div class="day-header">
+            <span class="day-label">${dateLabel(day.date)}</span>
+            ${todayPill}
+            <span class="day-task-count" id="badge-${day.date}">${taskCountTxt(day)}</span>
+            <button class="day-del-btn" onclick="removeDay('${day.date}')" title="Remove day">✕</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:36px;text-align:center;">#</th>
+                        <th>Job Name</th>
+                        <th class="center" style="width:110px;">Estimate (h)</th>
+                        <th class="center" style="width:110px;">Filled (h)</th>
+                        <th>Note</th>
+                        <th style="width:46px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-${day.date}">${tbodyHTML(day)}</tbody>
+                <tfoot id="tfoot-${day.date}"><tr>${tfootHTML(day)}</tr></tfoot>
+            </table>
+        </div>
+        <div class="day-footer">
+            <button class="btn btn-sm add-task-btn" onclick="addTask('${day.date}')">+ Add Task</button>
+        </div>
+    `;
+            return wrap;
+        }
+
+        function tbodyHTML(day) {
+            if (day.tasks.length === 0) return '';
+            return day.tasks.map((t, i) => `
+        <tr>
+            <td class="td-num">${i + 1}</td>
+            <td class="td-job">
+                <input type="text" class="job-input"
+                    value="${esc(t.jobName)}"
+                    placeholder="Job name / description…"
+                    oninput="updateTask('${day.date}',${t.id},'jobName',this.value)">
+            </td>
+            <td class="td-est">
+                <input type="number" value="${fmtNum(t.estimate)}" placeholder="—"
+                    min="0" step="0.25"
+                    oninput="updateTask('${day.date}',${t.id},'estimate',this.value)">
+            </td>
+            <td class="td-fill">
+                <input type="number" value="${fmtNum(t.filled)}" placeholder="—"
+                    min="0" step="0.25"
+                    oninput="updateTask('${day.date}',${t.id},'filled',this.value)">
+            </td>
+            <td class="td-note">
+                <input type="text" value="${esc(t.note)}"
+                    placeholder="Note…"
+                    oninput="updateTask('${day.date}',${t.id},'note',this.value)">
+            </td>
+            <td class="td-del">
+                <button class="del-task-btn" onclick="removeTask('${day.date}',${t.id})" title="Delete">✕</button>
+            </td>
+        </tr>
+    `).join('');
+        }
+
+        function tfootHTML(day) {
+            const { est, fill, rem } = dayTotals(day);
+            const hasData = est > 0 || fill > 0;
+            let remCls = 'zero', remTxt = '—';
+            if (hasData) {
+                if (rem > 0) { remCls = 'ok'; remTxt = `${rem.toFixed(1)}h remaining`; }
+                if (rem < 0) { remCls = 'over'; remTxt = `+${Math.abs(rem).toFixed(1)}h over`; }
+                if (rem === 0) { remCls = 'ok'; remTxt = 'All filled ✓'; }
+            }
+            return `
+        <td></td>
+        <td style="padding-left:18px;" class="total-label">Total</td>
+        <td class="total-num">${hasData && est > 0 ? est.toFixed(1) : '—'}</td>
+        <td class="total-num">${hasData && fill > 0 ? fill.toFixed(1) : '—'}</td>
+        <td><span class="total-rem ${remCls}">${remTxt}</span></td>
+        <td></td>
+    `;
+        }
+
+        function renderDayTbody(dateStr) {
+            const day = weekData.days.find(d => d.date === dateStr);
+            const el = document.getElementById(`tbody-${dateStr}`);
+            if (day && el) el.innerHTML = tbodyHTML(day);
+        }
+
+        function renderDayTfoot(dateStr) {
+            const day = weekData.days.find(d => d.date === dateStr);
+            const el = document.getElementById(`tfoot-${dateStr}`);
+            if (day && el) el.innerHTML = `<tr>${tfootHTML(day)}</tr>`;
+        }
+
+        function updateBadge(dateStr) {
+            const day = weekData.days.find(d => d.date === dateStr);
+            const el = document.getElementById(`badge-${dateStr}`);
+            if (day && el) el.textContent = taskCountTxt(day);
+        }
+
+        function taskCountTxt(day) {
+            const n = day.tasks.length;
+            return n === 0 ? 'No tasks' : `${n} task${n !== 1 ? 's' : ''}`;
+        }
+
+        // ══════════════════════════════════════════════
+        //  CALENDAR
+        // ══════════════════════════════════════════════
+        function openCalendar() {
+            const d = new Date();
+            calYear = d.getFullYear();
+            calMonth = d.getMonth();
+            calPicked = null;
+            document.getElementById('calAddBtn').disabled = true;
+            document.getElementById('calSelectedLbl').innerHTML = 'Select a date';
+            renderCal();
+            document.getElementById('calOverlay').style.display = 'block';
+            document.getElementById('calModal').style.display = 'block';
+        }
+
+        function closeCalendar() {
+            document.getElementById('calOverlay').style.display = 'none';
+            document.getElementById('calModal').style.display = 'none';
+        }
+
+        function calShiftMonth(delta) {
+            calMonth += delta;
+            if (calMonth < 0) { calMonth = 11; calYear--; }
+            if (calMonth > 11) { calMonth = 0; calYear++; }
+            renderCal();
+        }
+
+        function renderCal() {
+            document.getElementById('calMonthLbl').textContent =
+                `${MONTH_LONG[calMonth]} ${calYear}`;
+
+            const grid = document.getElementById('calDaysGrid');
+            // Keep the 7 weekday header divs, remove the rest
+            const headers = Array.from(grid.querySelectorAll('.cal-wd-hdr'));
+            grid.innerHTML = '';
+            headers.forEach(h => grid.appendChild(h));
+
+            const today = todayISO();
+            const existDays = new Set(weekData.days.map(d => d.date));
+
+            const first = new Date(calYear, calMonth, 1);
+            let startDow = first.getDay() - 1;
+            if (startDow < 0) startDow = 6;
+
+            const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+            const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+
+            // Prev month tail
+            for (let i = startDow - 1; i >= 0; i--) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-cell other';
+                cell.textContent = daysInPrev - i;
+                grid.appendChild(cell);
+            }
+
+            // Current month days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const ds = `${calYear}-${pad(calMonth + 1)}-${pad(day)}`;
+                const cell = document.createElement('div');
+                cell.className = 'cal-cell';
+                if (ds === today) cell.classList.add('today');
+                if (existDays.has(ds)) cell.classList.add('has-day');
+                if (ds === calPicked) cell.classList.add('picked');
+                cell.textContent = day;
+                cell.onclick = () => pickCalDate(ds);
+                grid.appendChild(cell);
+            }
+
+            // Next month fill
+            const total = Math.ceil((startDow + daysInMonth) / 7) * 7;
+            for (let i = 1; i <= total - startDow - daysInMonth; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-cell other';
+                cell.textContent = i;
+                grid.appendChild(cell);
+            }
+        }
+
+        function pickCalDate(ds) {
+            calPicked = ds;
+            document.getElementById('calAddBtn').disabled = false;
+            document.getElementById('calSelectedLbl').innerHTML =
+                `<span>${dateLabel(ds)}</span>`;
+            renderCal();
+        }
+
+        async function confirmCalDate() {
+            if (!calPicked) return;
+            const targetWeek = weekIdOf(calPicked);
+            closeCalendar();
+
+            if (targetWeek !== weekId) {
+                setWeekUI(targetWeek);
+                if (account) {
+                    await loadWeek(targetWeek);
+                }
+            }
+            addDay(calPicked);
+        }
+
+        // ══════════════════════════════════════════════
+        //  INIT
+        // ══════════════════════════════════════════════
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('wt_account');
+            const wId = weekIdOf(todayISO());
+            setWeekUI(wId);
+            if (saved) {
+                document.getElementById('accountInput').value = saved;
+                account = saved;
+                loadWeek(wId);
+            } else {
+                renderAll();
+            }
+        });
+    </script>
+</body>
+
+</html>
