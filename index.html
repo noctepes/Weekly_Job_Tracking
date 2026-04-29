@@ -591,8 +591,7 @@
             text-align: center;
         }
 
-        td input[type="text"],
-        td input[type="number"] {
+        td input[type="text"] {
             width: 100%;
             background: transparent;
             border: 1px solid transparent;
@@ -605,8 +604,7 @@
             transition: border-color 0.15s, background 0.15s;
         }
 
-        td input[type="text"]:focus,
-        td input[type="number"]:focus {
+        td input[type="text"]:focus {
             border-color: var(--accent);
             background: var(--panel);
             box-shadow: 0 0 0 2px var(--accent-glow);
@@ -618,16 +616,8 @@
             font-size: 12px;
         }
 
-        td input[type="number"] {
+        td input.num-input {
             text-align: center;
-        }
-
-        td input[type="number"]::-webkit-inner-spin-button {
-            opacity: 0;
-        }
-
-        td input[type="number"]:hover::-webkit-inner-spin-button {
-            opacity: 1;
         }
 
         /* ── TOTAL ROW ── */
@@ -636,10 +626,11 @@
         }
 
         tfoot td {
-            padding: 8px 12px;
+            padding: 8px 10px;
             font-family: 'DM Mono', monospace;
-            font-size: 12px;
+            font-size: 14px;
             border-top: 1px solid var(--border);
+            vertical-align: middle;
         }
 
         .total-label {
@@ -1344,7 +1335,27 @@
         }
 
         function fmtNum(n) {
-            return (n == null) ? '' : n;
+            return (n == null) ? '' : parseFloat(n).toFixed(2);
+        }
+
+        /* Sanitize numeric text input: comma → period, strip non-numeric chars */
+        function sanitizeNum(el) {
+            let val = el.value.replace(/,/g, '.');
+            // Allow only digits and one decimal point
+            val = val.replace(/[^0-9.]/g, '');
+            const parts = val.split('.');
+            if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('');
+            el.value = val;
+        }
+
+        /* On blur: format to 2 decimal places */
+        function formatNum(el) {
+            const val = parseFloat(el.value);
+            if (!isNaN(val)) {
+                el.value = val.toFixed(2);
+            } else {
+                el.value = '';
+            }
         }
 
         function dayTotals(day) {
@@ -1406,16 +1417,16 @@
             return `
         <div class="summary-item">
             <span class="summary-label">Estimate</span>
-            <span class="summary-value">${est.toFixed(1)}<span class="summary-unit">h</span></span>
+            <span class="summary-value">${est.toFixed(2)}<span class="summary-unit">h</span></span>
         </div>
         <div class="summary-item">
             <span class="summary-label">Filled</span>
-            <span class="summary-value">${fill.toFixed(1)}<span class="summary-unit">h</span></span>
+            <span class="summary-value">${fill.toFixed(2)}<span class="summary-unit">h</span></span>
         </div>
         <div class="summary-item">
             <span class="summary-label">Remaining</span>
             <span class="summary-value" style="color:${remColor}">
-                ${rem >= 0 ? rem.toFixed(1) : '+' + Math.abs(rem).toFixed(1)}<span class="summary-unit">h</span>
+                ${rem >= 0 ? rem.toFixed(2) : '+' + Math.abs(rem).toFixed(2)}<span class="summary-unit">h</span>
             </span>
         </div>
         <div class="summary-item">
@@ -1482,14 +1493,16 @@
                     oninput="updateTask('${day.date}',${t.id},'jobName',this.value)">
             </td>
             <td class="td-est">
-                <input type="number" value="${fmtNum(t.estimate)}" placeholder="—"
-                    min="0" step="0.25"
-                    oninput="updateTask('${day.date}',${t.id},'estimate',this.value)">
+                <input type="text" inputmode="decimal" class="num-input"
+                    value="${fmtNum(t.estimate)}" placeholder="—"
+                    oninput="sanitizeNum(this); updateTask('${day.date}',${t.id},'estimate',this.value)"
+                    onblur="formatNum(this); updateTask('${day.date}',${t.id},'estimate',this.value)">
             </td>
             <td class="td-fill">
-                <input type="number" value="${fmtNum(t.filled)}" placeholder="—"
-                    min="0" step="0.25"
-                    oninput="updateTask('${day.date}',${t.id},'filled',this.value)">
+                <input type="text" inputmode="decimal" class="num-input"
+                    value="${fmtNum(t.filled)}" placeholder="—"
+                    oninput="sanitizeNum(this); updateTask('${day.date}',${t.id},'filled',this.value)"
+                    onblur="formatNum(this); updateTask('${day.date}',${t.id},'filled',this.value)">
             </td>
             <td class="td-note">
                 <input type="text" value="${esc(t.note)}"
@@ -1508,15 +1521,15 @@
             const hasData = est > 0 || fill > 0;
             let remCls = 'zero', remTxt = '—';
             if (hasData) {
-                if (rem > 0) { remCls = 'ok'; remTxt = `${rem.toFixed(1)}h remaining`; }
-                if (rem < 0) { remCls = 'over'; remTxt = `+${Math.abs(rem).toFixed(1)}h over`; }
+                if (rem > 0) { remCls = 'ok'; remTxt = `${rem.toFixed(2)}h remaining`; }
+                if (rem < 0) { remCls = 'over'; remTxt = `+${Math.abs(rem).toFixed(2)}h over`; }
                 if (rem === 0) { remCls = 'ok'; remTxt = 'All filled ✓'; }
             }
             return `
         <td></td>
         <td style="padding-left:18px;" class="total-label">Total</td>
-        <td class="total-num">${hasData && est > 0 ? est.toFixed(1) : '—'}</td>
-        <td class="total-num">${hasData && fill > 0 ? fill.toFixed(1) : '—'}</td>
+        <td class="total-num">${hasData && est > 0 ? est.toFixed(2) : '—'}</td>
+        <td class="total-num">${hasData && fill > 0 ? fill.toFixed(2) : '—'}</td>
         <td><span class="total-rem ${remCls}">${remTxt}</span></td>
         <td></td>
     `;
