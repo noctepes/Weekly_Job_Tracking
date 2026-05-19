@@ -685,6 +685,77 @@
             color: var(--red);
         }
 
+        /* ── PIN / TEMPLATE BUTTON ── */
+        .pin-btn {
+            width: 26px;
+            height: 26px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            color: rgba(255, 255, 255, 0.25);
+            cursor: pointer;
+            font-size: 15px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto;
+            transition: all 0.15s;
+        }
+
+        .pin-btn:hover {
+            color: var(--amber);
+            background: var(--amber-bg);
+            border-color: rgba(240, 168, 76, 0.25);
+        }
+
+        .pin-btn.pinned {
+            color: var(--amber);
+        }
+
+        .pin-btn:disabled {
+            opacity: 0.15;
+            cursor: not-allowed;
+        }
+
+        /* ── TEMPLATES BADGE ── */
+        .tpl-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .tpl-count {
+            color: var(--amber);
+            font-weight: 500;
+        }
+
+        .tpl-clear-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            padding: 3px 8px;
+            font-family: 'Syne', sans-serif;
+            transition: all 0.15s;
+        }
+
+        .tpl-clear-btn:hover {
+            background: var(--red-bg);
+            border-color: rgba(240, 85, 85, 0.3);
+            color: var(--red);
+        }
+
+        .td-pin {
+            width: 36px;
+            text-align: center;
+        }
+
         /* ── DAY FOOTER ── */
         .day-footer {
             padding: 10px 14px;
@@ -1051,6 +1122,7 @@
         let calYear = 0;
         let calMonth = 0;
         let calPicked = null;
+        let pinnedTemplates = []; // [{jobName, estimate}] — persisted in localStorage per account
 
         // ══════════════════════════════════════════════
         //  WEEK HELPERS
@@ -1116,6 +1188,7 @@
             if (!val) return;
             account = val;
             localStorage.setItem('wt_account', val);
+            loadTemplates();
             loadWeek(weekId || weekIdOf(todayISO()));
         }
 
@@ -1135,6 +1208,7 @@
                 }, { merge: true });
                 setConn('ok', 'Connected');
                 enableCloudBtns(true);
+                loadTemplates();
                 loadWeek(weekId || weekIdOf(todayISO()));
             } catch (e) {
                 setConn('error', 'Error: ' + e.code);
@@ -1261,18 +1335,93 @@
         }
 
         // ══════════════════════════════════════════════
+        //  TEMPLATES (pinned recurring tasks)
+        // ══════════════════════════════════════════════
+        function tplKey() { return `wt_tpl_${account}`; }
+
+        function loadTemplates() {
+            if (!account) { pinnedTemplates = []; return; }
+            try { pinnedTemplates = JSON.parse(localStorage.getItem(tplKey())) || []; }
+            catch { pinnedTemplates = []; }
+        }
+
+        function saveTemplates() {
+            if (!account) return;
+            localStorage.setItem(tplKey(), JSON.stringify(pinnedTemplates));
+        }
+
+        function isPinned(jobName) {
+            if (!jobName || !jobName.trim()) return false;
+            return pinnedTemplates.some(t => t.jobName === jobName.trim());
+        }
+
+        function togglePin(dateStr, taskId) {
+            const day = weekData.days.find(d => d.date === dateStr);
+            if (!day) return;
+            const task = day.tasks.find(t => t.id === taskId);
+            if (!task || !task.jobName.trim()) return;
+            const jobName = task.jobName.trim();
+            const idx = pinnedTemplates.findIndex(t => t.jobName === jobName);
+            if (idx >= 0) {
+                pinnedTemplates.splice(idx, 1);
+            } else {
+                pinnedTemplates.push({ jobName, estimate: task.estimate });
+            }
+            saveTemplates();
+            renderDayTbody(dateStr);
+            renderTemplatesBadge();
+        }
+
+        function clearTemplates() {
+            if (!pinnedTemplates.length) return;
+            if (!confirm(`Clear all ${pinnedTemplates.length} saved template${pinnedTemplates.length > 1 ? 's' : ''}?`)) return;
+            pinnedTemplates = [];
+            saveTemplates();
+            weekData.days.forEach(d => renderDayTbody(d.date));
+            renderTemplatesBadge();
+        }
+
+        function renderTemplatesBadge() {
+            const el = document.getElementById('tplBadge');
+            if (el) el.innerHTML = tplBadgeHTML();
+        }
+
+        function tplBadgeHTML() {
+            if (!account) return '';
+            if (pinnedTemplates.length === 0) {
+                return `<span style="opacity:0.45; font-size:11px;">☆ Click ★ trên task bất kỳ để lưu làm template</span>`;
+            }
+            return `<span class="tpl-count">★ ${pinnedTemplates.length} template${pinnedTemplates.length > 1 ? 's' : ''} đã lưu</span>
+                    <button class="tpl-clear-btn" onclick="clearTemplates()">✕ Xoá tất cả</button>`;
+        }
+
+        // ══════════════════════════════════════════════
         //  DATA MUTATIONS
         // ══════════════════════════════════════════════
         function addDay(dateStr) {
             if (weekData.days.find(d => d.date === dateStr)) return;
-            weekData.days.push({ date: dateStr, tasks: [] });
+            // Pre-populate with pinned templates (clone, fresh filled/note)
+            const newTasks = pinnedTemplates.map(t => ({
+                id: idCounter++,
+                jobName: t.jobName,
+                estimate: t.estimate,
+                filled: null,
+                note: ''
+            }));
+            weekData.days.push({ date: dateStr, tasks: newTasks });
             weekData.days.sort((a, b) => b.date.localeCompare(a.date));
             renderAll();
             scheduleSave();
-            // Focus first task input after render
             setTimeout(() => {
-                const addBtn = document.querySelector(`[data-day="${dateStr}"] .add-task-btn`);
-                if (addBtn) addBtn.click();
+                if (newTasks.length === 0) {
+                    // No templates → open empty row immediately
+                    const addBtn = document.querySelector(`[data-day="${dateStr}"] .add-task-btn`);
+                    if (addBtn) addBtn.click();
+                } else {
+                    // Templates present → focus first Filled cell so user just types hours
+                    const firstFill = document.querySelector(`[data-day="${dateStr}"] .td-fill .num-input`);
+                    if (firstFill) firstFill.focus();
+                }
             }, 80);
         }
 
@@ -1378,7 +1527,10 @@
             // Add Date button — always at the top
             const addRow = document.createElement('div');
             addRow.className = 'add-day-row';
-            addRow.innerHTML = `<button class="btn" onclick="openCalendar()">📅 Add Date</button>`;
+            addRow.innerHTML = `
+                <button class="btn" onclick="openCalendar()">📅 Add Date</button>
+                <div class="tpl-info" id="tplBadge">${tplBadgeHTML()}</div>
+            `;
             main.appendChild(addRow);
 
             if (weekData.days.length === 0) {
@@ -1467,6 +1619,7 @@
                         <th class="center" style="width:110px;">Estimate (h)</th>
                         <th class="center" style="width:110px;">Filled (h)</th>
                         <th>Note</th>
+                        <th style="width:36px;text-align:center;" title="Lưu làm template">★</th>
                         <th style="width:46px;"></th>
                     </tr>
                 </thead>
@@ -1509,6 +1662,12 @@
                     placeholder="Note…"
                     oninput="updateTask('${day.date}',${t.id},'note',this.value)">
             </td>
+            <td class="td-pin">
+                <button class="pin-btn${isPinned(t.jobName) ? ' pinned' : ''}"
+                    onclick="togglePin('${day.date}',${t.id})"
+                    title="${isPinned(t.jobName) ? 'Bỏ khỏi template' : 'Lưu làm template'}"
+                    ${!t.jobName ? 'disabled' : ''}>${isPinned(t.jobName) ? '★' : '☆'}</button>
+            </td>
             <td class="td-del">
                 <button class="del-task-btn" onclick="removeTask('${day.date}',${t.id})" title="Delete">✕</button>
             </td>
@@ -1531,6 +1690,7 @@
         <td class="total-num">${hasData && est > 0 ? est.toFixed(2) : '—'}</td>
         <td class="total-num">${hasData && fill > 0 ? fill.toFixed(2) : '—'}</td>
         <td><span class="total-rem ${remCls}">${remTxt}</span></td>
+        <td></td>
         <td></td>
     `;
         }
@@ -1668,6 +1828,7 @@
             if (saved) {
                 document.getElementById('accountInput').value = saved;
                 account = saved;
+                loadTemplates();
                 loadWeek(wId);
             } else {
                 renderAll();
