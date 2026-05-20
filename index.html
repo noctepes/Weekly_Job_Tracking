@@ -1003,6 +1003,62 @@
                 opacity: 0.3
             }
         }
+
+        /* ── DRAG & DROP ── */
+        .td-drag {
+            width: 24px;
+            text-align: center;
+            padding: 0 4px !important;
+        }
+
+        .drag-handle {
+            font-size: 14px;
+            color: var(--muted);
+            opacity: 0;
+            cursor: grab;
+            user-select: none;
+            display: block;
+            line-height: 1;
+            transition: opacity 0.15s;
+        }
+
+        tbody tr:hover .drag-handle {
+            opacity: 0.55;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        tbody tr.is-dragging {
+            opacity: 0.35;
+            background: rgba(232, 127, 36, 0.06);
+        }
+
+        .day-block.drag-target {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 2px rgba(232, 127, 36, 0.25);
+            transition: border-color 0.1s, box-shadow 0.1s;
+        }
+
+        .day-block.drag-target .day-header {
+            background: rgba(232, 127, 36, 0.12);
+        }
+
+        .drag-target-hint {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            opacity: 0.7;
+            letter-spacing: 0.04em;
+        }
+
+        .day-block.drag-target .drag-target-hint {
+            display: block;
+        }
     </style>
 </head>
 
@@ -1544,6 +1600,9 @@
             } else {
                 weekData.days.forEach(day => main.appendChild(buildDayBlock(day)));
             }
+
+            // Bind drag & drop zones after DOM is built
+            bindDropZones();
         }
 
         // ══════════════════════════════════════════════
@@ -1614,6 +1673,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th style="width:24px;"></th>
                         <th style="width:36px;text-align:center;">#</th>
                         <th>Job Name</th>
                         <th class="center" style="width:110px;">Estimate (h)</th>
@@ -1627,6 +1687,7 @@
                 <tfoot id="tfoot-${day.date}"><tr>${tfootHTML(day)}</tr></tfoot>
             </table>
         </div>
+        <div class="drag-target-hint">↓ Thả task vào đây</div>
         <div class="day-footer">
             <button class="btn btn-sm add-task-btn" onclick="addTask('${day.date}')">+ Add Task</button>
         </div>
@@ -1637,7 +1698,10 @@
         function tbodyHTML(day) {
             if (day.tasks.length === 0) return '';
             return day.tasks.map((t, i) => `
-        <tr>
+        <tr draggable="true"
+            ondragstart="onTaskDragStart(event,'${day.date}',${t.id})"
+            ondragend="onTaskDragEnd(event)">
+            <td class="td-drag"><span class="drag-handle">⠿</span></td>
             <td class="td-num">${i + 1}</td>
             <td class="td-job">
                 <input type="text" class="job-input"
@@ -1685,6 +1749,7 @@
                 if (rem === 0) { remCls = 'ok'; remTxt = 'All filled ✓'; }
             }
             return `
+        <td></td>
         <td></td>
         <td style="padding-left:18px;" class="total-label">Total</td>
         <td class="total-num">${hasData && est > 0 ? est.toFixed(2) : '—'}</td>
@@ -1816,6 +1881,85 @@
                 }
             }
             addDay(calPicked);
+        }
+
+        // ══════════════════════════════════════════════
+        //  DRAG & DROP
+        // ══════════════════════════════════════════════
+        let dragState = null; // { dateStr, taskId }
+
+        function onTaskDragStart(event, dateStr, taskId) {
+            dragState = { dateStr, taskId };
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', taskId); // required for Firefox
+            // Delay adding class so drag ghost captures original style
+            setTimeout(() => {
+                if (event.target) event.target.classList.add('is-dragging');
+            }, 0);
+        }
+
+        function onTaskDragEnd(event) {
+            if (event.target) event.target.classList.remove('is-dragging');
+            // Clean up all highlights
+            document.querySelectorAll('.day-block.drag-target')
+                .forEach(b => b.classList.remove('drag-target'));
+            dragState = null;
+        }
+
+        function bindDropZones() {
+            document.querySelectorAll('[data-day]').forEach(block => {
+                if (block.dataset.dropBound) return; // skip already-bound blocks
+                block.dataset.dropBound = '1';
+
+                block.addEventListener('dragover', e => {
+                    if (!dragState) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    block.classList.add('drag-target');
+                });
+
+                block.addEventListener('dragleave', e => {
+                    // Only remove if truly leaving the block (not entering a child)
+                    if (!block.contains(e.relatedTarget)) {
+                        block.classList.remove('drag-target');
+                    }
+                });
+
+                block.addEventListener('drop', e => {
+                    e.preventDefault();
+                    block.classList.remove('drag-target');
+                    if (!dragState) return;
+
+                    const { dateStr: srcDate, taskId } = dragState;
+                    const tgtDate = block.getAttribute('data-day');
+                    dragState = null;
+
+                    if (srcDate === tgtDate) return; // same day → ignore
+
+                    const srcDay = weekData.days.find(d => d.date === srcDate);
+                    const tgtDay = weekData.days.find(d => d.date === tgtDate);
+                    if (!srcDay || !tgtDay) return;
+
+                    const taskIdx = srcDay.tasks.findIndex(t => t.id === taskId);
+                    if (taskIdx < 0) return;
+
+                    // Move task
+                    const [task] = srcDay.tasks.splice(taskIdx, 1);
+                    tgtDay.tasks.push(task);
+
+                    // Re-render both days
+                    renderDayTbody(srcDate);
+                    renderDayTfoot(srcDate);
+                    updateBadge(srcDate);
+
+                    renderDayTbody(tgtDate);
+                    renderDayTfoot(tgtDate);
+                    updateBadge(tgtDate);
+
+                    renderSummary();
+                    scheduleSave();
+                });
+            });
         }
 
         // ══════════════════════════════════════════════
