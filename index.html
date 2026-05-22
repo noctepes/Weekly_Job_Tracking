@@ -992,6 +992,239 @@
             background: var(--border-hi);
         }
 
+        /* ── JOB PRESET DROPDOWN ── */
+        #jobDropdown {
+            position: fixed;
+            z-index: 600;
+            background: #3a5228;
+            border: 1px solid var(--border-hi);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+            min-width: 260px;
+            max-width: 480px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .jd-header {
+            padding: 7px 12px 5px;
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255,248,236,0.45);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .jd-item {
+            padding: 9px 14px;
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.1s;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .jd-item:last-child { border-bottom: none; }
+
+        .jd-item:hover, .jd-item.active {
+            background: rgba(232,127,36,0.18);
+            color: var(--accent);
+        }
+
+        .jd-item .jd-icon {
+            font-size: 11px;
+            opacity: 0.45;
+            flex-shrink: 0;
+        }
+
+        .jd-empty {
+            padding: 10px 14px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: rgba(255,248,236,0.35);
+            font-style: italic;
+        }
+
+        .jd-manage {
+            padding: 8px 14px;
+            font-family: 'Syne', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--amber);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.12);
+            transition: background 0.1s;
+        }
+
+        .jd-manage:hover { background: rgba(240,168,76,0.12); }
+
+        /* ── PRESET MODAL ── */
+        #presetOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            z-index: 950;
+        }
+
+        #presetModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 951;
+            background: var(--surface);
+            border: 1px solid var(--border-hi);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 32px 80px rgba(0,0,0,0.75);
+            width: 440px;
+            max-width: calc(100vw - 40px);
+            max-height: 80vh;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .preset-modal-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .preset-modal-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .preset-modal-subtitle {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .preset-modal-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.15s;
+            line-height: 1;
+        }
+
+        .preset-modal-close:hover { color: var(--text); }
+
+        .preset-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 20px;
+        }
+
+        .preset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .preset-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 12px;
+            transition: border-color 0.15s;
+        }
+
+        .preset-row:hover { border-color: var(--border-hi); }
+
+        .preset-row-name {
+            flex: 1;
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .preset-del-btn {
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .preset-del-btn:hover {
+            background: var(--red-bg);
+            border-color: rgba(240,85,85,0.3);
+            color: var(--red);
+        }
+
+        .preset-add-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .preset-add-input {
+            flex: 1;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            padding: 8px 12px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .preset-add-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .preset-add-input::placeholder {
+            color: var(--muted);
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .preset-empty {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: rgba(255,248,236,0.35);
+            font-style: italic;
+            padding: 8px 0;
+        }
+
         @keyframes pulse {
 
             0%,
@@ -1107,6 +1340,30 @@
     <!-- ── MAIN ── -->
     <div class="main" id="main"></div>
 
+    <!-- ── JOB PRESET DROPDOWN ── -->
+    <div id="jobDropdown"></div>
+
+    <!-- ── PRESET MANAGEMENT MODAL ── -->
+    <div id="presetOverlay" onclick="closePresetsModal()"></div>
+    <div id="presetModal">
+        <div class="preset-modal-hdr">
+            <div>
+                <div class="preset-modal-title">⚡ Job Presets</div>
+                <div class="preset-modal-subtitle">Chọn nhanh khi nhập Job Name</div>
+            </div>
+            <button class="preset-modal-close" onclick="closePresetsModal()">✕</button>
+        </div>
+        <div class="preset-modal-body">
+            <div class="preset-list" id="presetList"></div>
+            <div class="preset-add-row">
+                <input type="text" class="preset-add-input" id="presetAddInput"
+                    placeholder="Thêm preset mới… (VD: 5010004 - Internal)"
+                    onkeydown="if(event.key==='Enter') addPreset()">
+                <button class="btn btn-primary btn-sm" onclick="addPreset()">+ Add</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ── CALENDAR ── -->
     <div id="calOverlay" onclick="closeCalendar()"></div>
     <div id="calModal">
@@ -1179,6 +1436,8 @@
         let calMonth = 0;
         let calPicked = null;
         let pinnedTemplates = []; // [{jobName, estimate}] — persisted in localStorage per account
+        let presetJobs = [];     // [string] — job name presets, persisted in localStorage per account
+        let dropdownActiveInput = null; // currently open job input
 
         // ══════════════════════════════════════════════
         //  WEEK HELPERS
@@ -1245,6 +1504,7 @@
             account = val;
             localStorage.setItem('wt_account', val);
             loadTemplates();
+            loadPresets();
             loadWeek(weekId || weekIdOf(todayISO()));
         }
 
@@ -1265,6 +1525,7 @@
                 setConn('ok', 'Connected');
                 enableCloudBtns(true);
                 loadTemplates();
+                loadPresets();
                 loadWeek(weekId || weekIdOf(todayISO()));
             } catch (e) {
                 setConn('error', 'Error: ' + e.code);
@@ -1452,6 +1713,170 @@
         }
 
         // ══════════════════════════════════════════════
+        //  JOB PRESETS — load / save / CRUD
+        // ══════════════════════════════════════════════
+        const DEFAULT_PRESETS = [
+            '5010004 - Internal',
+            '5010004 - Unschedule'
+        ];
+
+        function presetKey() { return `wt_presets_${account}`; }
+
+        function loadPresets() {
+            if (!account) { presetJobs = [...DEFAULT_PRESETS]; return; }
+            try {
+                const stored = localStorage.getItem(presetKey());
+                if (stored !== null) {
+                    presetJobs = JSON.parse(stored);
+                } else {
+                    // First time for this account → seed with defaults
+                    presetJobs = [...DEFAULT_PRESETS];
+                    savePresets();
+                }
+            } catch { presetJobs = [...DEFAULT_PRESETS]; }
+        }
+
+        function savePresets() {
+            if (!account) return;
+            localStorage.setItem(presetKey(), JSON.stringify(presetJobs));
+        }
+
+        function addPreset() {
+            const input = document.getElementById('presetAddInput');
+            const val = input.value.trim();
+            if (!val) return;
+            if (presetJobs.includes(val)) { input.value = ''; return; }
+            presetJobs.push(val);
+            savePresets();
+            input.value = '';
+            renderPresetList();
+        }
+
+        function removePreset(idx) {
+            presetJobs.splice(idx, 1);
+            savePresets();
+            renderPresetList();
+        }
+
+        function renderPresetList() {
+            const el = document.getElementById('presetList');
+            if (!el) return;
+            if (presetJobs.length === 0) {
+                el.innerHTML = `<div class="preset-empty">Chưa có preset nào. Thêm bên dưới.</div>`;
+                return;
+            }
+            el.innerHTML = presetJobs.map((p, i) => `
+                <div class="preset-row">
+                    <span class="preset-row-name">${esc(p)}</span>
+                    <button class="preset-del-btn" onclick="removePreset(${i})" title="Xóa">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function openPresetsModal() {
+            hideJobDropdown();
+            renderPresetList();
+            document.getElementById('presetOverlay').style.display = 'block';
+            const modal = document.getElementById('presetModal');
+            modal.style.display = 'flex';
+            setTimeout(() => document.getElementById('presetAddInput').focus(), 80);
+        }
+
+        function closePresetsModal() {
+            document.getElementById('presetOverlay').style.display = 'none';
+            document.getElementById('presetModal').style.display = 'none';
+        }
+
+        // ══════════════════════════════════════════════
+        //  JOB PRESET DROPDOWN
+        // ══════════════════════════════════════════════
+        function showJobDropdown(input) {
+            dropdownActiveInput = input;
+            positionAndRenderDropdown(input);
+        }
+
+        function positionAndRenderDropdown(input) {
+            const dd = document.getElementById('jobDropdown');
+            const query = input.value.trim().toLowerCase();
+            const matches = presetJobs.filter(p =>
+                query === '' || p.toLowerCase().includes(query)
+            );
+
+            // Don't show if typed text already exactly matches a preset (or close to it)
+            // and there's nothing left to suggest
+            if (matches.length === 0 && query !== '') {
+                dd.style.display = 'none';
+                return;
+            }
+
+            let html = `<div class="jd-header">Job Presets</div>`;
+            if (matches.length === 0) {
+                html += `<div class="jd-empty">Không có preset phù hợp</div>`;
+            } else {
+                html += matches.map((p, i) => `
+                    <div class="jd-item" onmousedown="selectPreset('${p.replace(/'/g, "\\'")}')">
+                        <span class="jd-icon">▸</span>${esc(p)}
+                    </div>
+                `).join('');
+            }
+            html += `<div class="jd-manage" onmousedown="openPresetsModal()">⚙ Quản lý presets…</div>`;
+            dd.innerHTML = html;
+
+            // Position below the input
+            const rect = input.getBoundingClientRect();
+            dd.style.display = 'block';
+            dd.style.left = rect.left + 'px';
+            dd.style.top = (rect.bottom + 4) + 'px';
+            dd.style.minWidth = Math.max(260, rect.width) + 'px';
+        }
+
+        function selectPreset(jobName) {
+            if (!dropdownActiveInput) return;
+            const input = dropdownActiveInput;
+            input.value = jobName;
+
+            // Trigger updateTask via the input's oninput logic
+            // We fire an input event so the existing handler updates state
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            hideJobDropdown();
+            input.blur();
+        }
+
+        function hideJobDropdown() {
+            document.getElementById('jobDropdown').style.display = 'none';
+            dropdownActiveInput = null;
+        }
+
+        // Global event delegation for job inputs
+        function initJobDropdown() {
+            document.getElementById('main').addEventListener('focusin', e => {
+                if (e.target.classList.contains('job-input')) {
+                    showJobDropdown(e.target);
+                }
+            });
+            document.getElementById('main').addEventListener('focusout', e => {
+                if (e.target.classList.contains('job-input')) {
+                    // Small delay so onmousedown on dropdown fires first
+                    setTimeout(() => {
+                        if (dropdownActiveInput === e.target) hideJobDropdown();
+                    }, 160);
+                }
+            });
+            document.getElementById('main').addEventListener('input', e => {
+                if (e.target.classList.contains('job-input') && dropdownActiveInput === e.target) {
+                    positionAndRenderDropdown(e.target);
+                }
+            });
+            // Reposition on scroll/resize
+            window.addEventListener('scroll', () => {
+                if (dropdownActiveInput) positionAndRenderDropdown(dropdownActiveInput);
+            }, { passive: true });
+            window.addEventListener('resize', () => {
+                if (dropdownActiveInput) positionAndRenderDropdown(dropdownActiveInput);
+            }, { passive: true });
+        }
+
+        // ══════════════════════════════════════════════
         //  DATA MUTATIONS
         // ══════════════════════════════════════════════
         function addDay(dateStr) {
@@ -1585,6 +2010,7 @@
             addRow.className = 'add-day-row';
             addRow.innerHTML = `
                 <button class="btn" onclick="openCalendar()">📅 Add Date</button>
+                <button class="btn btn-sm" onclick="openPresetsModal()" style="gap:5px;">⚡ Job Presets <span style="font-family:'DM Mono',monospace;font-size:11px;opacity:0.65;">(${presetJobs.length})</span></button>
                 <div class="tpl-info" id="tplBadge">${tplBadgeHTML()}</div>
             `;
             main.appendChild(addRow);
@@ -1973,10 +2399,13 @@
                 document.getElementById('accountInput').value = saved;
                 account = saved;
                 loadTemplates();
+                loadPresets();
                 loadWeek(wId);
             } else {
+                loadPresets(); // load defaults even without account
                 renderAll();
             }
+            initJobDropdown();
         });
     </script>
 </body>
