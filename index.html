@@ -1292,6 +1292,86 @@
         .day-block.drag-target .drag-target-hint {
             display: block;
         }
+
+        /* ── UNSCHEDULE ROW ── */
+        tbody tr.is-unschedule {
+            background: rgba(220, 50, 50, 0.13) !important;
+        }
+        tbody tr.is-unschedule:hover {
+            background: rgba(220, 50, 50, 0.2) !important;
+        }
+        tbody tr.is-unschedule .job-input {
+            color: #ff9999 !important;
+        }
+
+        /* ── SEARCH HIGHLIGHT ── */
+        tbody tr.search-match {
+            background: rgba(232, 127, 36, 0.22) !important;
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+        tbody tr.search-match:hover {
+            background: rgba(232, 127, 36, 0.3) !important;
+        }
+
+        /* ── SEARCH BOX ── */
+        .search-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+        }
+        .search-input {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            padding: 6px 10px 6px 28px;
+            width: 200px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, width 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+            width: 260px;
+        }
+        .search-input::placeholder {
+            color: var(--muted);
+            font-style: italic;
+            font-size: 12px;
+        }
+        .search-icon-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-icon {
+            position: absolute;
+            left: 8px;
+            font-size: 13px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .search-clear {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: color 0.15s;
+            display: none;
+        }
+        .search-clear:hover { color: var(--text); }
+        .search-match-count {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            white-space: nowrap;
+        }
     </style>
 </head>
 
@@ -2012,6 +2092,17 @@
                 <button class="btn" onclick="openCalendar()">📅 Add Date</button>
                 <button class="btn btn-sm" onclick="openPresetsModal()" style="gap:5px;">⚡ Job Presets <span style="font-family:'DM Mono',monospace;font-size:11px;opacity:0.65;">(${presetJobs.length})</span></button>
                 <div class="tpl-info" id="tplBadge">${tplBadgeHTML()}</div>
+                <div class="search-wrap">
+                    <div class="search-icon-wrap">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="jobSearch" class="search-input"
+                            placeholder="Search job…"
+                            oninput="applySearchHighlight()"
+                            onkeydown="if(event.key==='Escape'){this.value='';applySearchHighlight();}">
+                    </div>
+                    <button class="search-clear" id="searchClearBtn" onclick="clearSearch()" title="Clear search">✕</button>
+                    <span class="search-match-count" id="searchMatchCount"></span>
+                </div>
             `;
             main.appendChild(addRow);
 
@@ -2029,6 +2120,7 @@
 
             // Bind drag & drop zones after DOM is built
             bindDropZones();
+            applySearchHighlight();
         }
 
         // ══════════════════════════════════════════════
@@ -2121,12 +2213,17 @@
             return wrap;
         }
 
+        function isUnscheduleJob(jobName) {
+            return jobName && jobName.trim().toLowerCase().includes('unschedule');
+        }
+
         function tbodyHTML(day) {
             if (day.tasks.length === 0) return '';
             return day.tasks.map((t, i) => `
         <tr draggable="true"
             ondragstart="onTaskDragStart(event,'${day.date}',${t.id})"
-            ondragend="onTaskDragEnd(event)">
+            ondragend="onTaskDragEnd(event)"
+            class="${isUnscheduleJob(t.jobName) ? 'is-unschedule' : ''}">
             <td class="td-drag"><span class="drag-handle">⠿</span></td>
             <td class="td-num">${i + 1}</td>
             <td class="td-job">
@@ -2189,7 +2286,7 @@
         function renderDayTbody(dateStr) {
             const day = weekData.days.find(d => d.date === dateStr);
             const el = document.getElementById(`tbody-${dateStr}`);
-            if (day && el) el.innerHTML = tbodyHTML(day);
+            if (day && el) { el.innerHTML = tbodyHTML(day); applySearchHighlight(); }
         }
 
         function renderDayTfoot(dateStr) {
@@ -2386,6 +2483,50 @@
                     scheduleSave();
                 });
             });
+        }
+
+        // ══════════════════════════════════════════════
+        //  SEARCH
+        // ══════════════════════════════════════════════
+        function applySearchHighlight() {
+            const input = document.getElementById('jobSearch');
+            if (!input) return;
+            const q = input.value.trim().toLowerCase();
+            const clearBtn = document.getElementById('searchClearBtn');
+            const countEl = document.getElementById('searchMatchCount');
+
+            // Toggle clear button visibility
+            if (clearBtn) clearBtn.style.display = q ? 'inline' : 'none';
+
+            // Remove all previous highlights
+            document.querySelectorAll('tbody tr.search-match').forEach(r => r.classList.remove('search-match'));
+
+            if (!q) {
+                if (countEl) countEl.textContent = '';
+                return;
+            }
+
+            let matchCount = 0;
+            document.querySelectorAll('tbody tr').forEach(row => {
+                const jobInput = row.querySelector('.job-input');
+                if (jobInput && jobInput.value.toLowerCase().includes(q)) {
+                    row.classList.add('search-match');
+                    matchCount++;
+                }
+            });
+
+            if (countEl) {
+                countEl.textContent = matchCount > 0 ? `${matchCount} match${matchCount !== 1 ? 'es' : ''}` : 'No match';
+            }
+
+            // Scroll to first match
+            const first = document.querySelector('tbody tr.search-match');
+            if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('jobSearch');
+            if (input) { input.value = ''; applySearchHighlight(); input.focus(); }
         }
 
         // ══════════════════════════════════════════════
