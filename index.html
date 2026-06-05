@@ -2507,16 +2507,28 @@
             }
 
             let matchCount = 0;
+            let filledTotal = 0;
             document.querySelectorAll('tbody tr').forEach(row => {
                 const jobInput = row.querySelector('.job-input');
                 if (jobInput && jobInput.value.toLowerCase().includes(q)) {
                     row.classList.add('search-match');
                     matchCount++;
+                    const nums = row.querySelectorAll('.num-input');
+                    if (nums.length >= 2) {
+                        const v = parseFloat(nums[1].value);
+                        if (!isNaN(v)) filledTotal += v;
+                    }
                 }
             });
 
             if (countEl) {
-                countEl.textContent = matchCount > 0 ? `${matchCount} match${matchCount !== 1 ? 'es' : ''}` : 'No match';
+                if (matchCount > 0) {
+                    const label = `${matchCount} match${matchCount !== 1 ? 'es' : ''}`;
+                    const hrs = filledTotal > 0 ? ` · ${filledTotal.toFixed(2)}h filled` : '';
+                    countEl.textContent = label + hrs;
+                } else {
+                    countEl.textContent = 'No match';
+                }
             }
 
             // Scroll to first match
