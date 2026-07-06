@@ -999,7 +999,7 @@
             background: #3a5228;
             border: 1px solid var(--border-hi);
             border-radius: var(--radius-lg);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
             min-width: 260px;
             max-width: 480px;
             overflow: hidden;
@@ -1012,8 +1012,8 @@
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: rgba(255,248,236,0.45);
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            color: rgba(255, 248, 236, 0.45);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .jd-item {
@@ -1026,13 +1026,16 @@
             align-items: center;
             gap: 8px;
             transition: background 0.1s;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .jd-item:last-child { border-bottom: none; }
+        .jd-item:last-child {
+            border-bottom: none;
+        }
 
-        .jd-item:hover, .jd-item.active {
-            background: rgba(232,127,36,0.18);
+        .jd-item:hover,
+        .jd-item.active {
+            background: rgba(232, 127, 36, 0.18);
             color: var(--accent);
         }
 
@@ -1046,7 +1049,7 @@
             padding: 10px 14px;
             font-family: 'DM Mono', monospace;
             font-size: 12px;
-            color: rgba(255,248,236,0.35);
+            color: rgba(255, 248, 236, 0.35);
             font-style: italic;
         }
 
@@ -1060,19 +1063,21 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.12);
             transition: background 0.1s;
         }
 
-        .jd-manage:hover { background: rgba(240,168,76,0.12); }
+        .jd-manage:hover {
+            background: rgba(240, 168, 76, 0.12);
+        }
 
         /* ── PRESET MODAL ── */
         #presetOverlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(3px);
             z-index: 950;
         }
@@ -1087,7 +1092,7 @@
             background: var(--surface);
             border: 1px solid var(--border-hi);
             border-radius: var(--radius-lg);
-            box-shadow: 0 32px 80px rgba(0,0,0,0.75);
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.75);
             width: 440px;
             max-width: calc(100vw - 40px);
             max-height: 80vh;
@@ -1130,7 +1135,9 @@
             line-height: 1;
         }
 
-        .preset-modal-close:hover { color: var(--text); }
+        .preset-modal-close:hover {
+            color: var(--text);
+        }
 
         .preset-modal-body {
             flex: 1;
@@ -1156,7 +1163,9 @@
             transition: border-color 0.15s;
         }
 
-        .preset-row:hover { border-color: var(--border-hi); }
+        .preset-row:hover {
+            border-color: var(--border-hi);
+        }
 
         .preset-row-name {
             flex: 1;
@@ -1183,7 +1192,7 @@
 
         .preset-del-btn:hover {
             background: var(--red-bg);
-            border-color: rgba(240,85,85,0.3);
+            border-color: rgba(240, 85, 85, 0.3);
             color: var(--red);
         }
 
@@ -1220,7 +1229,7 @@
         .preset-empty {
             font-family: 'DM Mono', monospace;
             font-size: 12px;
-            color: rgba(255,248,236,0.35);
+            color: rgba(255, 248, 236, 0.35);
             font-style: italic;
             padding: 8px 0;
         }
@@ -1297,9 +1306,11 @@
         tbody tr.is-unschedule {
             background: rgba(220, 50, 50, 0.13) !important;
         }
+
         tbody tr.is-unschedule:hover {
             background: rgba(220, 50, 50, 0.2) !important;
         }
+
         tbody tr.is-unschedule .job-input {
             color: #ff9999 !important;
         }
@@ -1309,6 +1320,7 @@
             background: rgba(232, 127, 36, 0.5) !important;
             box-shadow: inset 3px 0 0 var(--accent);
         }
+
         tbody tr.search-match:hover {
             background: rgba(232, 127, 36, 0.3) !important;
         }
@@ -1320,6 +1332,7 @@
             gap: 6px;
             margin-left: auto;
         }
+
         .search-input {
             background: var(--panel);
             border: 1px solid var(--border);
@@ -1332,21 +1345,25 @@
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s, width 0.2s;
         }
+
         .search-input:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 2px var(--accent-glow);
             width: 260px;
         }
+
         .search-input::placeholder {
             color: var(--muted);
             font-style: italic;
             font-size: 12px;
         }
+
         .search-icon-wrap {
             position: relative;
             display: flex;
             align-items: center;
         }
+
         .search-icon {
             position: absolute;
             left: 8px;
@@ -1354,6 +1371,7 @@
             opacity: 0.5;
             pointer-events: none;
         }
+
         .search-clear {
             background: transparent;
             border: none;
@@ -1365,7 +1383,11 @@
             transition: color 0.15s;
             display: none;
         }
-        .search-clear:hover { color: var(--text); }
+
+        .search-clear:hover {
+            color: var(--text);
+        }
+
         .search-match-count {
             font-family: 'DM Mono', monospace;
             font-size: 11px;
@@ -1475,13 +1497,14 @@
 
     <!-- ── FIREBASE SDK ── -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
     <script>
         // ══════════════════════════════════════════════
         //  FIREBASE
         // ══════════════════════════════════════════════
         const firebaseConfig = {
-            apiKey: "AIzaSyDRObVgxoUPEuIDV49ldTCtwVGmvmW3rlY",
+            apiKey: "AIzaSyDGIPSV0uMNMs9Svfn2YWN1b_CQnFY9ANw",
             authDomain: "task-manager-personal-f543e.firebaseapp.com",
             projectId: "task-manager-personal-f543e",
             storageBucket: "task-manager-personal-f543e.firebasestorage.app",
@@ -1490,10 +1513,20 @@
         };
 
         let db = null;
+        let auth = null;
+        let authReady = null; // Promise that resolves once anonymous sign-in completes
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
-            setConn('ok', 'Connected');
+            auth = firebase.auth();
+            // Sign in anonymously so Firestore rules (request.auth != null) are satisfied.
+            authReady = auth.signInAnonymously()
+                .then(() => setConn('ok', 'Connected'))
+                .catch(e => {
+                    console.error('Auth error:', e);
+                    setConn('error', 'Auth error: ' + e.code);
+                });
+            setConn('loading', 'Signing in…');
         } catch (e) {
             setConn('error', 'Offline');
         }
@@ -1596,6 +1629,7 @@
             localStorage.setItem('wt_account', val);
             setConn('loading', 'Creating…');
             try {
+                if (authReady) await authReady; // ensure signed in before writing
                 // Create root document if not exists (merge so we don't overwrite)
                 await db.collection('taskAccounts').doc(account).set({
                     accountName: account,
@@ -1654,6 +1688,7 @@
 
         async function loadWeek(wId) {
             if (!db || !account) { renderAll(); return; }
+            if (authReady) await authReady; // ensure signed in before reading Firestore
             setConn('loading', 'Loading…');
             setSaveStatus('loading');
             try {
@@ -1703,6 +1738,7 @@
             if (!db || !account || !weekId) return;
             setSaveStatus('saving');
             try {
+                if (authReady) await authReady; // ensure signed in before writing
                 await docRef().set({
                     [weekKey(weekId)]: {
                         days: weekData.days,
